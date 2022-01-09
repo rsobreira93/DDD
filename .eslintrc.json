@@ -3,9 +3,13 @@
         "es2021": true,
         "node": true
     },
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+      },
     "extends": [
         "airbnb-base",
-        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
         "prettier/@typescript-eslint",
         "prettier",
         "plugin:prettier/recommended"
