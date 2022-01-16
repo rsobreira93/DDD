@@ -1,11 +1,13 @@
-import User from '@modules/users/infra/typeorm/entities/User';
-import path from 'path';
-import uploadConfig from '@config/upload';
-import fs from 'fs';
-import AppError from '@shared/errors/AppError';
-import IUsersRepository from '../repositories/IUsersRepository';
 import { inject, injectable } from 'tsyringe';
+import * as path from 'path';
+import * as fs from 'fs';
 
+import uploadConfig from '@config/upload';
+
+import AppError from '@shared/errors/AppError';
+import User from '@modules/users/infra/typeorm/entities/User';
+import IUsersRepository from '../repositories/IUsersRepository';
+import IStoreProvider from '@shared/container/providers/StoregeProvider/models/IStoregeProvider';
 interface IRequest {
   user_id: string;
   avatarFilename: string;
@@ -14,7 +16,10 @@ interface IRequest {
 class UpdateUserAvatarService {
   constructor(
     @inject('UsersRepository')
-    private userRepository: IUsersRepository
+    private userRepository: IUsersRepository,
+
+    @inject('StoregeProvider')
+    private storegeProvider: IStoreProvider
   ) {}
 
   public async execute({ user_id, avatarFilename }: IRequest): Promise<User> {
@@ -25,15 +30,12 @@ class UpdateUserAvatarService {
     }
 
     if (user.avatar) {
-      const avatarFilePath = path.join(uploadConfig.directory, user.avatar);
-      const avatarExists = await fs.promises.stat(avatarFilePath);
-
-      if (avatarExists) {
-        await fs.promises.unlink(avatarFilePath);
-      }
+      await this.storegeProvider.deleteFile(user.avatar);
     }
 
-    user.avatar = avatarFilename;
+    const fileName = await this.storegeProvider.saveFile(avatarFilename);
+
+    user.avatar = fileName;
 
     await this.userRepository.save(user);
 
@@ -41,4 +43,4 @@ class UpdateUserAvatarService {
   }
 }
 
-export { UpdateUserAvatarService };
+export default UpdateUserAvatarService;
